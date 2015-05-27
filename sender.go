@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
-	"time"
 )
 
 const (
@@ -88,7 +87,6 @@ func (sender *senderImpl) send(msg Message) {
 	encoder := json.NewEncoder(&buf)
 	err := encoder.Encode(msg)
 
-	start := time.Now()
 	rsp, err := http.Post(sender.url, "application/json", &buf)
 	if err != nil {
 		log.Printf("goslacksender: Failed to post msg to Slack.  %v\n", err)
