@@ -1,3 +1,5 @@
+// goslacksender is a very simple API to send messages to a Slack channel.
+// Messages are queued to a background go routine so the call does not block.
 package goslacksender
 
 import (
@@ -13,7 +15,8 @@ const (
 	channel_size int = 100
 )
 
-// Type for queuing events to the background
+// Message encodes a slack message. Use it with Sender.Queue(). If you just want to
+// send a text message use Sender.Text()
 type Message struct {
 	Text      string `json:"text"`
 	Username  string `json:"username,omitempty"`
@@ -22,6 +25,7 @@ type Message struct {
 	Channel   string `json:"channel,omitempty"`
 }
 
+// Sender represents an instance of a slack sender. Create one via New()
 type Sender interface {
 	// Queue() queues a message to be send to Slack in the background
 	Queue(msg Message)
@@ -38,9 +42,13 @@ type senderImpl struct {
 }
 
 /*
-Create a new Sender.
+New() creates a new Sender.
 
 This creates a background goroutine to aggregate and send your events.
+
+Get the url to pass in by going to
+https://<teamname>.slack.com/services/new/incoming-webhook and following the
+instructions.
 */
 func New(url string) Sender {
 	sender := &senderImpl{
@@ -83,16 +91,13 @@ func (sender *senderImpl) send(msg Message) {
 	start := time.Now()
 	rsp, err := http.Post(sender.url, "application/json", &buf)
 	if err != nil {
-		log.Printf("Failed to post msg to Slack.  %v\n", err)
+		log.Printf("goslacksender: Failed to post msg to Slack.  %v\n", err)
 		return
 	}
 	defer rsp.Body.Close()
 
 	if rsp.StatusCode != http.StatusOK {
-		log.Printf("Failure return for slack msg post.  %d, %s\n", rsp.StatusCode, rsp.Status)
-	} else {
-		// TODO: remove once bedded in
-		log.Printf("slack message sent in %v\n", time.Since(start))
+		log.Printf("goslacksender: Failure return for slack msg post.  %d, %s\n", rsp.StatusCode, rsp.Status)
 	}
 }
 
@@ -103,5 +108,5 @@ func (sender *senderImpl) run() {
 
 	// Indicate that this thread is over
 	sender.done <- true
-	log.Printf("Slack sender exited\n")
+	log.Printf("goslacksender: Slack sender exited\n")
 }
