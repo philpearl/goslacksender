@@ -16,7 +16,7 @@ import (
 	"github.com/philpearl/ut"
 )
 
-const SLACK_URL = "https://hooks.slack.com/services/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"
+const SLACK_URL = "https://hooks.slack.com/services/xxxxxxxx/YYYYYYYYYYYYYYYYYYYYYYYYY"
 
 var Sender = goslacksender.New(SLACK_URL)
 
